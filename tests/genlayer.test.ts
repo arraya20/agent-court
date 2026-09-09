@@ -16,7 +16,7 @@ const original = { ...process.env };
 
 function configure() {
   process.env.NEXT_PUBLIC_GENLAYER_NETWORK = "bradbury";
-  process.env.NEXT_PUBLIC_AGENT_COURT_ADDRESS = "0x69F035f4D24E6631235A737ADD9860f4b1A1d4C4";
+  process.env.NEXT_PUBLIC_AGENT_COURT_ADDRESS = "0x77D72Ffd837071da939462aEEc60fc24FCf4a73c";
   process.env.NEXT_PUBLIC_AGENT_COURT_SCHEMA_VERSION = "2";
   process.env.NEXT_PUBLIC_AGENT_COURT_NETWORK_ID = "4221";
 }
@@ -78,7 +78,7 @@ describe("GenLayer adapter", () => {
   it("reads the configured contract state", async () => {
     const { readCourtState } = await loadModule();
     readContract.mockResolvedValue({ schema_version: 2, state: "draft" });
-    await readCourtState("0x69F035f4D24E6631235A737ADD9860f4b1A1d4C4");
+    await readCourtState("0x77D72Ffd837071da939462aEEc60fc24FCf4a73c");
     expect(readContract).toHaveBeenCalledWith(expect.objectContaining({ functionName: "get_case" }));
   });
 

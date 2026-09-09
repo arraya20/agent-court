@@ -1,7 +1,6 @@
 import { createClient } from "genlayer-js";
 import { localnet, studionet, testnetAsimov, testnetBradbury } from "genlayer-js/chains";
 import type { TransactionHash } from "genlayer-js/types";
-import { keccak256, stringToHex } from "viem";
 import type { Address } from "viem";
 
 const networkName = process.env.NEXT_PUBLIC_GENLAYER_NETWORK ?? "studionet";
@@ -135,10 +134,6 @@ export async function acceptCourt() {
 export async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return `0x${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("")}`;
-}
-
-export function agreementPreviewHash(input: { terms: string; buyer: string; seller: string; designated: string; obligations: Array<{ id: string; clause: string; acceptance_criteria: string; remedy: string; weight_bps: number }> }) {
-  return keccak256(stringToHex(JSON.stringify({ buyer: input.buyer, designated: input.designated, obligations: input.obligations, seller: input.seller, terms: input.terms, version: "v2" }, null, 2)));
 }
 
 export async function waitForCourtTransaction(hash: TransactionHash) {
