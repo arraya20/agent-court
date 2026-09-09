@@ -13,8 +13,7 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
-const seller = "0x2c8b4f1e9d0a3c5b7e6f8a2d4c1b3e5f7a9c0e04";
-const designated = "0x9f0c2e4b6a8d1f3e5c7b9a0d2f4e6c8b0a1d3b12";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const terms = "Seller must deliver a professionally written market report with at least 95% coverage of the approved source list. Conclusions must be grounded in cited evidence.";
 const obligations = [
   { id: "OB-1", clause: "Cover the approved source list comprehensively", acceptance_criteria: "At least 95% source coverage", remedy: "Fixed 60% quality tranche", weight_bps: 6000 },
@@ -30,16 +29,33 @@ export function deploymentNetwork(value: string | undefined): DeploymentNetwork 
 }
 
 export function buildDeploymentArgs(): [string, string, string, string, string, bigint, string] {
-  const buyer = process.env.GENLAYER_AGENT_COURT_BUYER;
-  if (typeof buyer !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(buyer)) {
-    throw new Error("GENLAYER_AGENT_COURT_BUYER must be a valid wallet address.");
-  }
+  const buyer = requiredAddress("GENLAYER_AGENT_COURT_BUYER");
+  const seller = requiredAddress("GENLAYER_AGENT_COURT_SELLER");
+  const designated = optionalAddress("GENLAYER_AGENT_COURT_DESIGNATED") ?? ZERO_ADDRESS;
+  if (buyer.toLowerCase() === seller.toLowerCase()) throw new Error("GENLAYER_AGENT_COURT_BUYER and GENLAYER_AGENT_COURT_SELLER must differ.");
   const escrow = process.env.GENLAYER_AGENT_COURT_ESCROW ?? "120";
   if (!/^\d+$/.test(escrow) || BigInt(escrow) <= 0n) {
     throw new Error("GENLAYER_AGENT_COURT_ESCROW must be a positive integer amount in GEN.");
   }
   const agreementHash = keccak256(stringToHex(canonicalizeContract({ buyer, designated, obligations, seller, terms, version: "v1" })));
   return [agreementHash, terms, buyer, seller, designated, BigInt(escrow), JSON.stringify(obligations)];
+}
+
+function requiredAddress(name: string): string {
+  const value = process.env[name];
+  if (typeof value !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(value)) {
+    throw new Error(`${name} must be a valid wallet address.`);
+  }
+  return value;
+}
+
+function optionalAddress(name: string): string | undefined {
+  const value = process.env[name];
+  if (value === undefined || value === "") return undefined;
+  if (typeof value !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(value)) {
+    throw new Error(`${name} must be empty or a valid wallet address.`);
+  }
+  return value;
 }
 
 export function parseDeploymentResult(input: { txId: string; contractAddress?: string; network: string }) {

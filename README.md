@@ -92,10 +92,15 @@ tests/genlayer.test.ts          Frontend adapter and write-guard tests
 - Public evidence must match its SHA-256 hash; source URIs must use HTTPS.
 - Private evidence is hash-only and cannot be cited by the AI ruling.
 - Each obligation has a fixed `weight_bps`; payout allocation is deterministic code.
+- Odd inconclusive weights round the extra basis point to the seller; settlement gives the buyer the floor amount and the seller the exact remainder.
 - Settlement is idempotent and guarded against duplicate execution.
 - Receipts must be `FINALIZED`, `SUCCESS`, and `FINISHED_WITH_RETURN` before the UI reports success.
 
-Bradbury's current GenVM exposes `run_nondet_unsafe`; the validator therefore checks the leader result without invoking the LLM a second time, avoiding deterministic violations on this network.
+#### Known consensus limitation
+
+Bradbury's current GenVM (`genvm v0.2.11`) exposes `run_nondet_unsafe`, and invoking the LLM again inside the validator caused deterministic violations during testing. The current validator therefore checks only the leader result's schema and shape; it does not independently re-run the model.
+
+**This is a leader-dictation compatibility workaround, not production consensus.** Payout remains deterministic because the model only selects obligation status and fixed weights control allocation, but a single leader could still choose the status outcome. Production deployment must replace this with independent validator evaluation (for example `run_nondet_default` or an equivalent sandboxed comparison) once the target GenVM supports it.
 
 ## Deploy
 
@@ -110,6 +115,15 @@ Configure deployment variables in `.env.local`, then run:
 
 ```bash
 npm run deploy:bradbury
+```
+
+Required deployment variables:
+
+```text
+GENLAYER_AGENT_COURT_BUYER=0x...
+GENLAYER_AGENT_COURT_SELLER=0x...
+GENLAYER_AGENT_COURT_DESIGNATED=0x...   # optional; empty disables the third opener
+GENLAYER_AGENT_COURT_ESCROW=1
 ```
 
 The script deploys `contracts/agent_court.py`, waits for finalization, and writes the contract address and transaction ID to `deployments/testnet-bradbury.json`.

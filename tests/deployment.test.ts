@@ -1,34 +1,54 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { buildDeploymentArgs, deploymentNetwork, parseDeploymentResult } from "@/deploy/config";
 
 describe("deployment configuration", () => {
-  it("uses the configured buyer wallet and escrow amount", () => {
-    const originalBuyer = process.env.GENLAYER_AGENT_COURT_BUYER;
-    const originalEscrow = process.env.GENLAYER_AGENT_COURT_ESCROW;
-    process.env.GENLAYER_AGENT_COURT_BUYER = "0x33445abc8b75f285cfb83088abada08a288561fd";
-    process.env.GENLAYER_AGENT_COURT_ESCROW = "120";
-    const args = buildDeploymentArgs();
-    expect(args[2]).toBe("0x33445abc8b75f285cfb83088abada08a288561fd");
-    expect(args[5]).toBe(120n);
-    if (originalBuyer === undefined) delete process.env.GENLAYER_AGENT_COURT_BUYER;
-    else process.env.GENLAYER_AGENT_COURT_BUYER = originalBuyer;
-    if (originalEscrow === undefined) delete process.env.GENLAYER_AGENT_COURT_ESCROW;
-    else process.env.GENLAYER_AGENT_COURT_ESCROW = originalEscrow;
+  const originalEnvironment = { ...process.env };
+
+  afterEach(() => {
+    process.env = originalEnvironment;
   });
 
-  it("rejects a missing or malformed buyer wallet", () => {
-    const originalBuyer = process.env.GENLAYER_AGENT_COURT_BUYER;
-    delete process.env.GENLAYER_AGENT_COURT_BUYER;
-    expect(() => buildDeploymentArgs()).toThrow("GENLAYER_AGENT_COURT_BUYER");
-    process.env.GENLAYER_AGENT_COURT_BUYER = "0xinvalid";
-    expect(() => buildDeploymentArgs()).toThrow("GENLAYER_AGENT_COURT_BUYER");
-    if (originalBuyer === undefined) delete process.env.GENLAYER_AGENT_COURT_BUYER;
-    else process.env.GENLAYER_AGENT_COURT_BUYER = originalBuyer;
+  function configureParties() {
+    process.env.GENLAYER_AGENT_COURT_BUYER = "0x33445abc8b75f285cfb83088abada08a288561fd";
+    process.env.GENLAYER_AGENT_COURT_SELLER = "0x2c8b4f1e9d0a3c5b7e6f8a2d4c1b3e5f7a9c0e04";
+    process.env.GENLAYER_AGENT_COURT_DESIGNATED = "0x9f0c2e4b6a8d1f3e5c7b9a0d2f4e6c8b0a1d3b12";
+    process.env.GENLAYER_AGENT_COURT_ESCROW = "120";
+  }
+
+  it("uses configured buyer, seller, designated opener, and escrow", () => {
+    configureParties();
+    const args = buildDeploymentArgs();
+    expect(args[2]).toBe("0x33445abc8b75f285cfb83088abada08a288561fd");
+    expect(args[3]).toBe("0x2c8b4f1e9d0a3c5b7e6f8a2d4c1b3e5f7a9c0e04");
+    expect(args[4]).toBe("0x9f0c2e4b6a8d1f3e5c7b9a0d2f4e6c8b0a1d3b12");
+    expect(args[5]).toBe(120n);
+  });
+
+  it("defaults the designated opener to zero address when omitted", () => {
+    configureParties();
+    delete process.env.GENLAYER_AGENT_COURT_DESIGNATED;
+    const args = buildDeploymentArgs();
+    expect(args[4]).toBe("0x0000000000000000000000000000000000000000");
+  });
+
+  it("rejects missing or malformed party addresses", () => {
+    for (const name of ["GENLAYER_AGENT_COURT_BUYER", "GENLAYER_AGENT_COURT_SELLER"]) {
+      configureParties();
+      delete process.env[name];
+      expect(() => buildDeploymentArgs()).toThrow(name);
+      process.env[name] = "0xinvalid";
+      expect(() => buildDeploymentArgs()).toThrow(name);
+    }
+  });
+
+  it("rejects identical buyer and seller addresses", () => {
+    configureParties();
+    process.env.GENLAYER_AGENT_COURT_SELLER = process.env.GENLAYER_AGENT_COURT_BUYER!;
+    expect(() => buildDeploymentArgs()).toThrow("must differ");
   });
 
   it("builds constructor arguments with canonical obligations and GEN escrow", () => {
-    process.env.GENLAYER_AGENT_COURT_BUYER = "0x33445abc8b75f285cfb83088abada08a288561fd";
-    process.env.GENLAYER_AGENT_COURT_ESCROW = "120";
+    configureParties();
     const args = buildDeploymentArgs();
     expect(args).toHaveLength(7);
     expect(JSON.parse(args[6] as string).reduce((total: number, item: { weight_bps: number }) => total + item.weight_bps, 0)).toBe(10000);
