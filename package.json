@@ -1,0 +1,47 @@
+{
+  "name": "agent-court",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "build:deploy": "esbuild deploy/001_deploy_agent_court.ts --bundle --platform=node --format=esm --outfile=deploy/001_deploy_agent_court.compiled.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "genlayer:lint": "genvm-lint contracts/agent_court.py",
+    "deploy:local": "genlayer network set localnet && GENLAYER_DEPLOY_NETWORK=localnet genlayer deploy",
+    "deploy:studionet": "npm run build:deploy && genlayer network set studionet && GENLAYER_DEPLOY_NETWORK=studionet genlayer deploy",
+    "deploy:asimov": "npm run build:deploy && genlayer network set testnet-asimov && GENLAYER_DEPLOY_NETWORK=testnet-asimov genlayer deploy",
+    "deploy:bradbury": "npm run build:deploy && genlayer network set testnet-bradbury && GENLAYER_DEPLOY_NETWORK=testnet-bradbury genlayer deploy"
+  },
+  "dependencies": {
+    "genlayer-js": "^1.1.8",
+    "next": "^16.3.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "viem": "^2.37.3"
+  },
+  "overrides": {
+    "dockerode": {
+      "uuid": "^11.1.1"
+    }
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "eslint": "^9.35.0",
+    "eslint-config-next": "^16.3.4",
+    "genlayer": "^0.39.2",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.11"
+  }
+}

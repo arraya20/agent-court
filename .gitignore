@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+tsconfig.tsbuildinfo
+deploy/*.compiled.js
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+keystore*.json
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Tooling and OS
+.DS_Store
+.idea/
+.codegraph/
+.codex/
+*.log
+*.pid
