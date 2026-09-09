@@ -1,5 +1,0 @@
-networks:
-  localnet:
-    rpc_url: http://localhost:4000/api
-  studionet:
-    rpc_url: https://studio.genlayer.com/api

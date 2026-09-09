@@ -26,5 +26,7 @@ __pycache__/
 .idea/
 .codegraph/
 .codex/
+AGENTS.md
+gltest.config.yaml
 *.log
 *.pid
